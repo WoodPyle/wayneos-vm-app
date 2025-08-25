@@ -1,0 +1,21 @@
+# CODEOWNERS for WayneOS
+# These owners will be requested for review when someone opens a pull request
+
+# Global owners
+* @bbobwayne @bw-wayne
+
+# Frontend specific
+/frontend/ @bbobwayne
+/desktop-app/ @bbobwayne
+
+# Backend specific
+/backend/ @bw-wayne
+/wayneos-kernel/ @bw-wayne
+
+# Deployment and CI/CD
+/deployment/ @bbobwayne @bw-wayne
+/.github/ @bbobwayne @bw-wayne
+
+# Documentation
+*.md @bbobwayne
+/docs/ @bbobwayne

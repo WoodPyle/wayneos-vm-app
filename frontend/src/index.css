@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-wayneos-primary text-white;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-wayneos-primary;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-wayneos-accent rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-wayneos-secondary;
+}
+
+/* Terminal styles */
+.xterm {
+  font-family: 'Menlo', 'DejaVu Sans Mono', 'Lucida Console', monospace;
+  font-size: 14px;
+  padding: 10px;
+}
+
+.xterm .xterm-viewport {
+  overflow-y: auto !important;
+}

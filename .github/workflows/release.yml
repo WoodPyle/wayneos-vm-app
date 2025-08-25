@@ -1,0 +1,126 @@
+name: Release with Provenance
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  id-token: write
+  contents: write
+  pages: write
+  attestations: write
+
+jobs:
+  build-sign-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: |
+          cd frontend && npm ci && cd ..
+          cd backend && npm ci && cd ..
+          cd desktop-app && npm ci && cd ..
+      
+      - name: Build all components
+        run: |
+          # Build frontend
+          cd frontend
+          npm run build
+          cd ..
+          
+          # Build backend
+          cd backend
+          npm run build
+          cd ..
+          
+          # Prepare desktop app
+          cp -r frontend/dist desktop-app/build
+      
+      - name: Package release artifacts
+        run: |
+          # Create release directory
+          mkdir -p release
+          
+          # Package web application
+          tar -czf release/wayneos-web-${GITHUB_REF_NAME}.tar.gz \
+            frontend/dist \
+            backend/dist \
+            wayneos-kernel \
+            deployment \
+            README.md
+          
+          # Create checksums
+          cd release
+          shasum -a 256 wayneos-web-${GITHUB_REF_NAME}.tar.gz > wayneos-web-${GITHUB_REF_NAME}.sha256
+          cd ..
+      
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+      
+      - name: Sign artifacts
+        run: |
+          cd release
+          cosign sign-blob --yes \
+            wayneos-web-${GITHUB_REF_NAME}.tar.gz \
+            --output-signature wayneos-web-${GITHUB_REF_NAME}.sig \
+            --output-certificate wayneos-web-${GITHUB_REF_NAME}.crt
+          cd ..
+      
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: release/sbom.json
+      
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: 'release/wayneos-web-*.tar.gz'
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/wayneos-web-*.tar.gz
+            release/wayneos-web-*.sha256
+            release/wayneos-web-*.sig
+            release/wayneos-web-*.crt
+            release/sbom.json
+          body: |
+            ## WayneOS ${{ github.ref_name }}
+            
+            AI-Native Operating System - 313,150 ops/sec
+            
+            ### 🔐 Verification
+            
+            ```bash
+            # Verify checksum
+            shasum -a 256 -c wayneos-web-${{ github.ref_name }}.sha256
+            
+            # Verify signature
+            cosign verify-blob \
+              --signature wayneos-web-${{ github.ref_name }}.sig \
+              --certificate wayneos-web-${{ github.ref_name }}.crt \
+              --certificate-identity-regexp ".*" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              wayneos-web-${{ github.ref_name }}.tar.gz
+            ```
+            
+            ### 📦 What's Included
+            - Frontend (React + TypeScript)
+            - Backend (Node.js + Express)
+            - Python Kernel with AI Agents
+            - Deployment configurations
+            - SBOM (Software Bill of Materials)
+            
+            ### 🚀 Quick Start
+            See [README](https://github.com/${{ github.repository }}) for deployment instructions.

@@ -1,0 +1,130 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm:${SHORT_SHA}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm:latest'
+      - '-f'
+      - 'deployment/Dockerfile'
+      - '.'
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm'
+
+  # Deploy to Cloud Run - Base
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wayneos-base'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm:${SHORT_SHA}'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--set-env-vars'
+      - 'DISTRIBUTION=wayneos'
+
+  # Deploy to Cloud Run - TOP
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wayneos-top'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm:${SHORT_SHA}'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--set-env-vars'
+      - 'DISTRIBUTION=wayneos-top'
+
+  # Deploy to Cloud Run - SSPB
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wayneos-sspb'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm:${SHORT_SHA}'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--set-env-vars'
+      - 'DISTRIBUTION=wayneos-sspb'
+
+  # Deploy to Cloud Run - Financial
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wayneos-financial'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm:${SHORT_SHA}'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--set-env-vars'
+      - 'DISTRIBUTION=wayneos-financial'
+
+  # Deploy to Cloud Run - Enterprise
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wayneos-enterprise'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm:${SHORT_SHA}'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '4Gi'
+      - '--cpu'
+      - '4'
+      - '--set-env-vars'
+      - 'DISTRIBUTION=wayneos-enterprise'
+
+images:
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm:${SHORT_SHA}'
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/wayneos/wayneos-vm:latest'
+
+timeout: '1200s'
